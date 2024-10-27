@@ -78,12 +78,13 @@ func ElectionStage(TaskId int, in chan mensagem, out chan mensagem, leader int) 
 			switch temp.tipo {
 			case 1: // Mensagem de eleição
 				if bFailed {
-					// Se está falho, ignora a mensagem
-					fmt.Printf("%2d: Estou falho, ignorando mensagem.\n", TaskId)
+					// Se está falho, envia a mensagem imediatamente para o próximo
+					fmt.Printf("%2d: Estou falho, passando mensagem para o próximo.\n", TaskId)
+					out <- temp
 					continue
 				}
 
-				// Inclui o ID do processo na mensagem se houver espaço
+				// Inclui o ID do processo na mensagem, se houver espaço
 				added := false
 				for i := 0; i < len(temp.corpo); i++ {
 					if temp.corpo[i] == -1 {
