@@ -78,7 +78,7 @@ func ElectionStage(TaskId int, in chan mensagem, out chan mensagem, leader int) 
 			switch temp.tipo {
 			case 1: // Mensagem de eleição
 				if bFailed {
-					// Se está falho, envia a mensagem imediatamente para o próximo
+					// Se está falho, envia a mensagem para o próximo e não a processa novamente
 					fmt.Printf("%2d: Estou falho, passando mensagem para o próximo.\n", TaskId)
 					out <- temp
 					continue
