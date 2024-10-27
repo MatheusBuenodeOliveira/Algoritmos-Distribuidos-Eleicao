@@ -64,7 +64,7 @@ func ElectionStage(TaskId int, in chan mensagem, out chan mensagem, leader int) 
 	// Função auxiliar para iniciar uma eleição
 	startElection := func() {
 		electionInProgress = true
-		temp.tipo = 1        // Inicia eleição
+		temp.tipo = 1                      // Inicia eleição
 		temp.corpo = [3]int{TaskId, -1, -1} // Define o próprio ID
 		fmt.Printf("%2d: Iniciando eleição...\n", TaskId)
 		out <- temp
@@ -83,16 +83,18 @@ func ElectionStage(TaskId int, in chan mensagem, out chan mensagem, leader int) 
 					continue
 				}
 
-				// Inclui o ID do processo na mensagem, se espaço disponível
+				// Inclui o ID do processo na mensagem se houver espaço
+				added := false
 				for i := 0; i < len(temp.corpo); i++ {
 					if temp.corpo[i] == -1 {
 						temp.corpo[i] = TaskId
+						added = true
 						break
 					}
 				}
 
 				// Verifica se completou uma volta
-				if temp.corpo[0] == TaskId {
+				if temp.corpo[0] == TaskId && added {
 					// Define o novo coordenador com o maior ID
 					newLeader := maxID(temp.corpo)
 					fmt.Printf("%2d: Eleição concluída. Novo coordenador é %d\n", TaskId, newLeader)
@@ -144,6 +146,7 @@ func maxID(ids [3]int) int {
 	}
 	return max
 }
+
 
 func main() {
 
