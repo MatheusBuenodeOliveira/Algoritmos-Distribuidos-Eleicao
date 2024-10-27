@@ -65,7 +65,7 @@ func ElectionStage(TaskId int, in chan mensagem, out chan mensagem, leader int) 
 	startElection := func() {
 		electionInProgress = true
 		temp.tipo = 1                      // Inicia eleição
-		temp.corpo = [3]int{TaskId, -1, -1} // Define o próprio ID
+		temp.corpo = [3]int{TaskId, -1, -1} // Define o próprio ID como iniciador
 		fmt.Printf("%2d: Iniciando eleição...\n", TaskId)
 		out <- temp
 	}
@@ -78,7 +78,7 @@ func ElectionStage(TaskId int, in chan mensagem, out chan mensagem, leader int) 
 			switch temp.tipo {
 			case 1: // Mensagem de eleição
 				if bFailed {
-					// Se está falho, envia a mensagem para o próximo e não a processa novamente
+					// Se está falho, passa a mensagem para o próximo processo uma vez
 					fmt.Printf("%2d: Estou falho, passando mensagem para o próximo.\n", TaskId)
 					out <- temp
 					continue
