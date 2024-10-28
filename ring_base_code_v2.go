@@ -8,6 +8,7 @@ import (
 type mensagem struct {
     tipo  int    // tipo da mensagem (eleição, confirmação, falha, novo coordenador)
     corpo [4]int // IDs dos processos envolvidos
+    electionInitiator int
 }
 
 var (
@@ -42,6 +43,14 @@ func ElectionControler(in chan int) {
         fmt.Printf("Controle: confirmação %d\n", confirmation)
     }
 
+        // Simula a falha do processo 1
+        temp.tipo = 2
+        chans[1] <- temp
+        fmt.Println("Controle: mudar o processo 1 para falho")
+        if confirmation := <-in; confirmation != 0 {
+            fmt.Printf("Controle: confirmação %d\n", confirmation)
+        }
+
     fmt.Println("\n   Processo controlador concluído\n")
 }
 
@@ -63,7 +72,8 @@ func ElectionStage(TaskId int, in chan mensagem, out chan mensagem, leader int) 
                 electionInitiator = TaskId
                 fmt.Printf("%2d: Iniciando eleição, meu id: %d\n", TaskId, TaskId)
                 temp.tipo = 5
-                temp.corpo[TaskId] = TaskId
+                temp.corpo[TaskId] = 1
+                temp.electionInitiator = electionInitiator
                 out <- temp // Passa a mensagem para o próximo
             } else {
                 out <- temp
@@ -94,18 +104,23 @@ func ElectionStage(TaskId int, in chan mensagem, out chan mensagem, leader int) 
         case 5: // Mensagem de eleição
             if !bFailed { // Apenas processos ativos participam da votação
                 fmt.Printf("%2d: recebendo eleição, meu id: %d\n", TaskId, TaskId)
-                temp.corpo[TaskId] = TaskId // Registra o próprio ID
+                temp.corpo[TaskId] = 1 // Registra o próprio ID
                 fmt.Printf("%2d: votei\n", TaskId)
+                electionInitiator = temp.electionInitiator
 
                 // Verifica se o processo inicial já recebeu de volta a eleição
                 if TaskId == electionInitiator {
                     // Define o novo coordenador com o maior ID
-                    newLeader := maxID(temp.corpo)
+                    newLeader := minID(temp.corpo)
                     fmt.Printf("%2d: Eleição finalizada, o novo coordenador é %d\n", TaskId, newLeader)
 
                     // Envia mensagem de novo coordenador para todos
                     temp.tipo = 4
                     temp.corpo[0] = newLeader
+                    temp.corpo[1] = -1
+                    temp.corpo[2] = -1
+                    temp.corpo[3] = -1
+
                     actualLeader = newLeader
                     out <- temp
                     finished = true // Finaliza o loop
@@ -124,14 +139,13 @@ func ElectionStage(TaskId int, in chan mensagem, out chan mensagem, leader int) 
     }
 }
 
-func maxID(ids [4]int) int {
-    max := -1
-    for _, id := range ids {
-        if id > max && id != -1 {
-            max = id
+func minID(ids [4]int) int {
+    for i, id := range ids {
+        if id == 1 {
+            return i 
         }
     }
-    return max
+    return -1 // Retorna -1 caso não encontre o número "1" no array
 }
 
 func main() {
