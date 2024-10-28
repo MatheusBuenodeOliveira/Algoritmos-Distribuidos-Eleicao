@@ -43,23 +43,18 @@ func ElectionControler(in chan int) {
     }
 
     fmt.Println("\n   Processo controlador concluído\n")
-    close(in) // Encerra o canal de controle ao final do processo
 }
 
 func ElectionStage(TaskId int, in chan mensagem, out chan mensagem, leader int) {
     defer wg.Done()
 
     var actualLeader int = leader
-    var bFailed bool = false // todos iniciam sem falha
+    var bFailed bool = false      // todos iniciam sem falha
     var electionInitiator int = -1 // Identificador do iniciador da eleição
-    finished := false               // controla o término da eleição
+    finished := false              // controla o término da eleição
 
     for !finished {
-        temp, ok := <-in // Lê mensagem e verifica se o canal foi fechado
-        if !ok {         // Se o canal foi fechado, finaliza
-            fmt.Printf("%2d: Canal fechado, encerrando.\n", TaskId)
-            return
-        }
+        temp := <-in // ler mensagem
         fmt.Printf("%2d: recebi mensagem %d, [ %d, %d, %d, %d ]\n", TaskId, temp.tipo, temp.corpo[0], temp.corpo[1], temp.corpo[2], temp.corpo[3])
 
         switch temp.tipo {
@@ -94,10 +89,6 @@ func ElectionStage(TaskId int, in chan mensagem, out chan mensagem, leader int) 
             actualLeader = temp.corpo[0]
             bFailed = false
             fmt.Printf("%2d: novo coordenador é %d\n", TaskId, actualLeader)
-
-            temp.tipo = 4 // Tipo de mensagem para novo líder
-            temp.corpo[0] = actualLeader
-            out <- temp
             finished = true // Finaliza o processo após estabelecer o líder
 
         case 5: // Mensagem de eleição
@@ -111,7 +102,7 @@ func ElectionStage(TaskId int, in chan mensagem, out chan mensagem, leader int) 
                     // Define o novo coordenador com o maior ID
                     newLeader := maxID(temp.corpo)
                     fmt.Printf("%2d: Eleição finalizada, o novo coordenador é %d\n", TaskId, newLeader)
-                    
+
                     // Envia mensagem de novo coordenador para todos
                     temp.tipo = 4
                     temp.corpo[0] = newLeader
